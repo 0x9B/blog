@@ -7,25 +7,20 @@ of extra config that’s not really well documented so I’m posting it here.
 I have a NFS share that’s mounted on `/mnt/timemachine` as the storage backend.
 
 ```nix
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }: {
 
-{
-
-  imports = [
-    ./hardware-configuration.nix
-  ];
-
-  boot.loader.grub.enable = true;
-  boot.loader.grub.version = 2;
-  boot.loader.grub.device = "/dev/vda";
-
-  networking.hostName = "timemachine";
-  networking.firewall.enable = false;
-
-  time.timeZone = "Asia/Hong_Kong";
-
+  networking.firewall = {
+    allowedTCPPorts = [ 548 ];
+    allowedUDPPorts = [ 5353 ];
+  };
+  
+  users.extraUsers.timemachine = {
+    isNormalUser = true;
+    extraGroups = [ "storage" ];
+  };
+  
   services = {
-    openssh.enable = true;
+  
     avahi = {
       enable = true;
       publish = {
@@ -33,22 +28,19 @@ I have a NFS share that’s mounted on `/mnt/timemachine` as the storage backend
         userServices = true;
       };
     };
+    
     netatalk = {
       enable = true;
       volumes = {
         "timemachine" = {
-          path = "/mnt/timemachine";
+          path = "/mnt/storage/timemachine";
           "valid users" = "timemachine";
           "time machine" = "yes";
         };
       };
     };
+    
   };
-
-  users.extraUsers.timemachine = {
-    isNormalUser = true;
-    extraGroups = [ "wheel" ];
-  };
-
+  
 }
 ```
